@@ -14,17 +14,21 @@ app.get('/', (req, res) => {
 })
 
 app.get('/plate', (req, res) => {
-	const plate = "ABC123"
+	console.log(req.query.plate)
+	const plate = req.query.plate + ""
 	const regex = /(?<=Report - )(.*)(?=\| CARJAM)/g;
 
 	axios.get('https://www.carjam.co.nz/car/?plate=' + plate)
 	.then(response => {
 		const htmlData = response.data + ""
 		const carData = htmlData.match(regex)[0]
-		return carData.split('-')[1].trim()
+		res.send(carData.split('-')[1].trim())
 	})
-	.then(response => res.send(response))
-	.catch(() => console.log("There was a catch error"))
+	// .then(response => res.send(response))
+	.catch(() => {
+		console.log("There was a catch error")
+		res.status(400)
+	})
 })
 
 app.listen(PORT, () => console.log("App running on port: " + PORT))
