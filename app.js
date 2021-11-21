@@ -8,6 +8,8 @@ const setCookie = require('set-cookie-parser');
 // Setting up port variale
 const PORT = process.env.PORT || 4000
 
+const mongoBaseUrl = 'https://data.mongodb-api.com/app/data-xelyu/endpoint/data/beta/'
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors());
@@ -72,6 +74,38 @@ app.get('/address', (req, res) => {
 				.then((response) => res.send(response.data))
 				.catch((error) => console.log(error));
 		})
+})
+
+// Sending new quotes to MongoDB database
+app.post('/quotes/new', (req, res) => {
+	console.log(req.query)
+	const data = {
+		dataSource: 'turners',
+		database: 'quotedb',
+		collection: 'quotes',
+		document: {
+			car: JSON.parse(req.query.carData),
+			driver: [JSON.parse(req.query.driverData[0])]
+		}
+	};
+	console.log(data)
+	const config = {
+		method: 'post',
+		url: mongoBaseUrl + 'action/insertOne',
+		headers: {
+			'Content-Type': 'application/json', 
+    		'Access-Control-Request-Headers': '*', 
+    		'api-key': 'mB3Z0dFPLZ4SvXq4GfhL7XDJZydkMCiRFkwi05prBBz6YLgU9tW0aMEZR4WrOM98'
+		},
+		data: data
+	};
+
+	axios(config)
+	.then(response => {
+		console.log("Entry added with id: " + response.data.insertedID)
+		res.send(response.data)
+	})
+	.catch(() => console.log("There was a catch error"))
 })
 
 app.listen(PORT, () => console.log("App running on port: " + PORT));
