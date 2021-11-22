@@ -84,8 +84,22 @@ app.post('/quotes/new', (req, res) => {
 		database: 'quotedb',
 		collection: 'quotes',
 		document: {
+			type: req.query.type,
 			car: JSON.parse(req.query.carData),
-			driver: [JSON.parse(req.query.driverData[0])]
+			driver: [JSON.parse(req.query.driverData[0])],
+			costs: {
+				fortnight: 25, 
+				monthly: 48,
+				annually: 550
+			},
+			addons: {
+				aaRoadside: true,
+				windscreen: true,
+				breakdown: false
+			},
+			email: null,
+			accepted: false,
+			paid: false,
 		}
 	};
 	console.log(data)
@@ -102,7 +116,7 @@ app.post('/quotes/new', (req, res) => {
 
 	axios(config)
 	.then(response => {
-		console.log("Entry added with id: " + response.data.insertedID)
+		console.log("Entry added with id: " + response.data.insertedId)
 		res.send(response.data)
 	})
 	.catch(() => console.log("There was a catch error"))
