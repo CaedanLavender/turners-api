@@ -1,18 +1,34 @@
 // Package imports
 const express = require('express');
 const app = express();
+
 const axios = require('axios');
 const cors = require('cors');
 const setCookie = require('set-cookie-parser');
+const nodemailer = require('nodemailer');
+const dotenv = require('dotenv').config();
+
+
+const mongoBaseUrl = 'https://data.mongodb-api.com/app/data-xelyu/endpoint/data/beta/'
 
 // Setting up port variale
 const PORT = process.env.PORT || 4000
 
-const mongoBaseUrl = 'https://data.mongodb-api.com/app/data-xelyu/endpoint/data/beta/'
-
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors());
+
+// Nodemailer SETUP
+
+const transporter = nodemailer.createTransport({
+	host: 'smtp.office365.com',
+	port: 587,
+	secure: false,
+	auth: {
+		user: process.env.SEND_EMAIL,
+		pass: process.env.SEND_PASSWORD
+	}
+})
 
 // ENDPOINTS
 
@@ -78,17 +94,20 @@ app.get('/address', (req, res) => {
 
 // Sending new quotes to MongoDB database
 app.post('/quotes/new', (req, res) => {
+	const quoteId = Date.now()
+
 	console.log(req.query)
 	const data = {
 		dataSource: 'turners',
 		database: 'quotedb',
 		collection: 'quotes',
 		document: {
+			quoteId: quoteId,
 			type: req.query.type,
 			car: JSON.parse(req.query.carData),
 			driver: [JSON.parse(req.query.driverData[0])],
 			costs: {
-				fortnight: 25, 
+				fortnight: 25,
 				monthly: 48,
 				annually: 550
 			},
@@ -102,24 +121,71 @@ app.post('/quotes/new', (req, res) => {
 			paid: false,
 		}
 	};
-	console.log(data)
 	const config = {
 		method: 'post',
 		url: mongoBaseUrl + 'action/insertOne',
 		headers: {
-			'Content-Type': 'application/json', 
-    		'Access-Control-Request-Headers': '*', 
-    		'api-key': 'mB3Z0dFPLZ4SvXq4GfhL7XDJZydkMCiRFkwi05prBBz6YLgU9tW0aMEZR4WrOM98'
+			'Content-Type': 'application/json',
+			'Access-Control-Request-Headers': '*',
+			'api-key': 'mB3Z0dFPLZ4SvXq4GfhL7XDJZydkMCiRFkwi05prBBz6YLgU9tW0aMEZR4WrOM98'
 		},
 		data: data
 	};
 
 	axios(config)
-	.then(response => {
-		console.log("Entry added with id: " + response.data.insertedId)
-		res.send(response.data)
-	})
-	.catch(() => console.log("There was a catch error"))
+		.then(response => {
+			console.log("Entry added with id: " + response.data.insertedId)
+			console.log("Entry added with quoteId: " + quoteId)
+			res.send({quoteId: quoteId})
+		})
+		.catch(() => console.log("There was a catch error"))
+})
+
+app.get('/quotes/send', (req, res) => {
+	//MONGODB REQUEST
+	// const data = {
+	// 	dataSource: 'turners',
+	// 	database: 'quoteDB',
+	// 	collection: 'quotes',
+	// 	filter: {
+	// 		"quoteId": req.query.quoteId
+	// 	}
+	// }
+	// const config = {
+	// 	method: 'post',
+	// 	url: mongoBaseUrl + 'action/findOne',
+	// 	headers: {
+	// 		'Content-Type': 'application/json',
+	// 		'Access-Control-Request-Headers': '*',
+	// 		'api-key': 'mB3Z0dFPLZ4SvXq4GfhL7XDJZydkMCiRFkwi05prBBz6YLgU9tW0aMEZR4WrOM98',
+	// 	},
+	// 	data: data
+	// }
+	// axios(config)
+	// 	.then((response) => {
+	// 		console.log(response)
+	// 	})
+
+	//CONFIGURE EMAIL BODY
+
+	// SEND EMAIL
+	const mailOptions = {
+		from: process.env.SEND_EMAIL,
+		to: req.query.email,
+		subject: "Quote Number: " + req.query.quoteId,
+		text: "Quote body test"
+	}
+
+	console.log(mailOptions)
+
+	transporter.sendMail(mailOptions, (err, info) => {
+		if (err) {
+			console.log(err);
+		} else {
+			console.log('Email sent: ' + info.response);
+		}
+	});
+
 })
 
 app.listen(PORT, () => console.log("App running on port: " + PORT));
