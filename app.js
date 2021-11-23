@@ -8,7 +8,6 @@ const setCookie = require('set-cookie-parser');
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv').config();
 
-
 const mongoBaseUrl = 'https://data.mongodb-api.com/app/data-xelyu/endpoint/data/beta/'
 
 // Setting up port variale
@@ -94,7 +93,7 @@ app.get('/address', (req, res) => {
 
 // Sending new quotes to MongoDB database
 app.post('/quotes/new', (req, res) => {
-	const quoteId = Date.now()
+	const quoteId = Date.now().toString()
 
 	console.log(req.query)
 	const data = {
@@ -141,12 +140,42 @@ app.post('/quotes/new', (req, res) => {
 		.catch(() => console.log("There was a catch error"))
 })
 
+// ENDPOINT to retrieve quotes
+app.get('/quotes/get', (req, res) => {
+	// console.log(req)
+	const data = {
+		dataSource: 'turners',
+		database: 'quotedb',
+		collection: 'quotes',
+		filter: {
+			"quoteId": req.query.quoteId
+		}
+	}
+
+	const config = {
+		method: 'post',
+		url: mongoBaseUrl + 'action/findOne',
+		headers: {
+			'Content-Type': 'application/json',
+			'Access-Control-Request-Headers': '*',
+			'api-key': 'mB3Z0dFPLZ4SvXq4GfhL7XDJZydkMCiRFkwi05prBBz6YLgU9tW0aMEZR4WrOM98',
+		},
+		data: data
+	}
+
+	axios(config)
+		.then(response => {
+			res.send(response.data)
+		})
+		.catch(() => console.log("There was a catch error"))
+})
+
 //ENDPOINT to send quote as email
 app.get('/quotes/send', (req, res) => {
 	// MONGODB REQUEST
 	const data = {
 		dataSource: 'turners',
-		database: 'quoteDB',
+		database: 'quotedb',
 		collection: 'quotes',
 		filter: {
 			"quoteId": req.query.quoteId
@@ -167,11 +196,20 @@ app.get('/quotes/send', (req, res) => {
 	axios(config)
 		.then((response) => {
 			//CONFIGURE EMAIL BODY
+			console.log(response.data)
 			const mailOptions = {
 				from: process.env.SEND_EMAIL,
 				to: req.query.email,
 				subject: "Quote Number: " + req.query.quoteId,
-				text: response.data.toString()
+				text: (
+					`Please find your quote details below for your ${response.data.document.car.model} :\n\n
+Quote Numberr: ${response.data.document.quoteId}\n
+Type: ${response.data.document.type}\n\n\n
+Costs options:\n
+- Fortnight: $${response.data.document.costs.fortnight}.00\n
+- Monthly: $${response.data.document.costs.monthly}.00\n
+- Annually: $${response.data.document.costs.annually}.00`
+				)
 			}
 			// SEND EMAIL
 			transporter.sendMail(mailOptions, (err, info) => {
