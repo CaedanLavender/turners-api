@@ -141,8 +141,7 @@ app.post('/quotes/new', (req, res) => {
 		.catch(() => console.log("There was a catch error"))
 })
 
-
-
+// ENDPOINT to send quote as email
 app.get('/quotes/send', (req, res) => {
 	// MONGODB REQUEST
 	const data = {
@@ -153,7 +152,7 @@ app.get('/quotes/send', (req, res) => {
 			"quoteId": req.query.quoteId
 		}
 	}
-	
+
 	const config = {
 		method: 'post',
 		url: mongoBaseUrl + 'action/findOne',
