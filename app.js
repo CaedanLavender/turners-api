@@ -141,49 +141,49 @@ app.post('/quotes/new', (req, res) => {
 		.catch(() => console.log("There was a catch error"))
 })
 
-// ENDPOINT to send quote as email
-// app.get('/quotes/send', (req, res) => {
-// 	// MONGODB REQUEST
-// 	const data = {
-// 		dataSource: 'turners',
-// 		database: 'quoteDB',
-// 		collection: 'quotes',
-// 		filter: {
-// 			"quoteId": req.query.quoteId
-// 		}
-// 	}
+//ENDPOINT to send quote as email
+app.get('/quotes/send', (req, res) => {
+	// MONGODB REQUEST
+	const data = {
+		dataSource: 'turners',
+		database: 'quoteDB',
+		collection: 'quotes',
+		filter: {
+			"quoteId": req.query.quoteId
+		}
+	}
 
-// 	const config = {
-// 		method: 'post',
-// 		url: mongoBaseUrl + 'action/findOne',
-// 		headers: {
-// 			'Content-Type': 'application/json',
-// 			'Access-Control-Request-Headers': '*',
-// 			'api-key': 'mB3Z0dFPLZ4SvXq4GfhL7XDJZydkMCiRFkwi05prBBz6YLgU9tW0aMEZR4WrOM98',
-// 		},
-// 		data: data
-// 	}
+	const config = {
+		method: 'post',
+		url: mongoBaseUrl + 'action/findOne',
+		headers: {
+			'Content-Type': 'application/json',
+			'Access-Control-Request-Headers': '*',
+			'api-key': 'mB3Z0dFPLZ4SvXq4GfhL7XDJZydkMCiRFkwi05prBBz6YLgU9tW0aMEZR4WrOM98',
+		},
+		data: data
+	}
 
-// 	axios(config)
-// 		.then((response) => {
-// 			//CONFIGURE EMAIL BODY
-// 			const mailOptions = {
-// 				from: process.env.SEND_EMAIL,
-// 				to: req.query.email,
-// 				subject: "Quote Number: " + req.query.quoteId,
-// 				text: response.data.toString()
-// 			}
-// 			// SEND EMAIL
-// 			transporter.sendMail(mailOptions, (err, info) => {
-// 				if (err) {
-// 					console.log(err)
-// 					res.sendStatus(418)
-// 				} else {
-// 					console.log('Email sent: ' + info.response)
-// 					res.sendStatus(200)
-// 				}
-// 			})
-// 		})
-// })
+	axios(config)
+		.then((response) => {
+			//CONFIGURE EMAIL BODY
+			const mailOptions = {
+				from: process.env.SEND_EMAIL,
+				to: req.query.email,
+				subject: "Quote Number: " + req.query.quoteId,
+				text: response.data.toString()
+			}
+			// SEND EMAIL
+			transporter.sendMail(mailOptions, (err, info) => {
+				if (err) {
+					console.log(err)
+					res.sendStatus(418)
+				} else {
+					console.log('Email sent: ' + info.response)
+					res.sendStatus(200)
+				}
+			})
+		})
+})
 
 app.listen(PORT, () => console.log("App running on port: " + PORT));
