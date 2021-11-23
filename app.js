@@ -203,7 +203,7 @@ app.get('/quotes/send', (req, res) => {
 				subject: "Quote Number: " + req.query.quoteId,
 				text: (
 					`Please find your quote details below for your ${response.data.document.car.model} :\n\n
-Quote Numberr: ${response.data.document.quoteId}\n
+Quote Number: ${response.data.document.quoteId}\n
 Type: ${response.data.document.type}\n\n\n
 Costs options:\n
 - Fortnight: $${response.data.document.costs.fortnight}.00\n
